@@ -20,7 +20,7 @@ app.use(express.json());
 // 2. THE SERVERLESS EMAIL BRIDGE
 // ==========================================
 // PASTE YOUR GOOGLE WEB APP URL HERE:
-const GOOGLE_SCRIPT_URL = "PASTE_YOUR_COPIED_WEB_APP_URL_HERE"; 
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7P4uSESbZ9aLfptTATmv8J0JhyHX1azii6-VM_CIXNaN4Aybtm_p16GU_eP14bOdpBA/exec"; 
 
 app.post('/api/invite', async (req, res) => {
     console.log("[EMAIL] Routing payload to HTTPS Bridge...");

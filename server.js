@@ -26,13 +26,31 @@ app.post('/api/invite', async (req, res) => {
     console.log("[EMAIL] Routing payload to HTTPS Bridge...");
 
     try {
-        // Native fetch operates on Port 443 (HTTPS), which Render cannot block!
+        // Failsafe: Did you paste the URL?
+        if (GOOGLE_SCRIPT_URL.includes("PASTE_YOUR")) {
+            throw new Error("Google Script URL is missing in server.js!");
+        }
+
+        // 1. WE MUST INCLUDE CONTENT-TYPE HEADER!
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify(req.body)
         });
         
-        const data = await response.json();
+        // 2. Safely read Google's response (prevents JSON crash)
+        const rawText = await response.text();
+        
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (parseErr) {
+            console.error("[GOOGLE HTML ERROR]:", rawText);
+            throw new Error("Google returned an HTML page. Deployment settings are wrong.");
+        }
         
         if (data.success) {
             console.log("[EMAIL] Successfully blasted through Google servers.");

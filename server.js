@@ -34,8 +34,13 @@ const EMAIL_USER = process.env.EMAIL_USER || 'your-email@gmail.com';
 const EMAIL_PASS = process.env.EMAIL_PASS || 'your-16-char-app-password'; 
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: EMAIL_USER, pass: EMAIL_PASS }
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Use SSL
+    auth: { 
+        user: EMAIL_USER, 
+        pass: EMAIL_PASS.replace(/\s/g, '') // Force remove spaces just in case!
+    }
 });
 
 app.post('/api/invite', async (req, res) => {

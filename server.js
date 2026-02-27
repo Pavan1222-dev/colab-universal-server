@@ -1,27 +1,26 @@
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
-const cors = require('cors'); // <-- ADD THIS
 const nodemailer = require('nodemailer');
 
 const port = process.env.PORT || 4444;
 const app = express();
 
 // ==========================================
-// 1. BULLETPROOF CORS INTERCEPTOR
+// 1. NATIVE CORS INTERCEPTOR (No package needed!)
 // ==========================================
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     
-    // Intercept preflight OPTIONS request
+    // Intercept preflight OPTIONS request instantly
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
     next();
 });
-app.use(cors({ origin: '*' })); // <-- OFFICIAL CORS BYPASS
+
 app.use(express.json());
 
 app.get('/', (req, res) => {

@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
+const cors = require('cors'); // <-- ADD THIS
 const nodemailer = require('nodemailer');
 
 const port = process.env.PORT || 4444;
@@ -20,7 +21,7 @@ app.use((req, res, next) => {
     }
     next();
 });
-
+app.use(cors({ origin: '*' })); // <-- OFFICIAL CORS BYPASS
 app.use(express.json());
 
 app.get('/', (req, res) => {

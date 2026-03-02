@@ -19,19 +19,14 @@ app.use(express.json());
 // ==========================================
 // 2. THE SERVERLESS EMAIL BRIDGE
 // ==========================================
-// PASTE YOUR GOOGLE WEB APP URL HERE:
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7P4uSESbZ9aLfptTATmv8J0JhyHX1azii6-VM_CIXNaN4Aybtm_p16GU_eP14bOdpBA/exec"; 
 
 app.post('/api/invite', async (req, res) => {
     console.log("[EMAIL] Routing payload to HTTPS Bridge...");
-
     try {
-        // Failsafe: Did you paste the URL?
         if (GOOGLE_SCRIPT_URL.includes("PASTE_YOUR")) {
             throw new Error("Google Script URL is missing in server.js!");
         }
-
-        // 1. WE MUST INCLUDE CONTENT-TYPE HEADER!
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             headers: {
@@ -41,9 +36,7 @@ app.post('/api/invite', async (req, res) => {
             body: JSON.stringify(req.body)
         });
         
-        // 2. Safely read Google's response (prevents JSON crash)
         const rawText = await response.text();
-        
         let data;
         try {
             data = JSON.parse(rawText);
@@ -65,8 +58,13 @@ app.post('/api/invite', async (req, res) => {
     }
 });
 
+// WAKE-UP ROUTE: Visit this URL in the browser to wake up Render
+app.get('/', (req, res) => {
+    res.send("Co-Lab Universal Server is Awake and Listening!");
+});
+
 // ==========================================
-// 3. WEBSOCKET ENGINE
+// 3. WEBSOCKET ENGINE (BUFFER FIX APPLIED)
 // ==========================================
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -88,7 +86,10 @@ wss.on('connection', (ws) => {
     
     ws.on('message', (message) => {
         try {
-            const msg = JSON.parse(message);
+            // 🔴 THE FIX: Convert the incoming binary Buffer to a standard String
+            const messageString = message.toString();
+            const msg = JSON.parse(messageString);
+            
             if (!msg || !msg.type) return;
 
             switch (msg.type) {
@@ -108,7 +109,10 @@ wss.on('connection', (ws) => {
                 case 'publish':
                     if (msg.topic && topics.get(msg.topic)) {
                         topics.get(msg.topic).forEach(r => {
-                            if (r !== ws && r.readyState === WebSocket.OPEN) r.send(message);
+                            // 🔴 THE FIX: Send the Stringified message, not the Buffer
+                            if (r !== ws && r.readyState === WebSocket.OPEN) {
+                                r.send(messageString); 
+                            }
                         });
                     }
                     break;
@@ -116,7 +120,9 @@ wss.on('connection', (ws) => {
                     ws.send(JSON.stringify({ type: 'pong' }));
                     break;
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error("WS Data Parse Error", e);
+        }
     });
 
     ws.on('close', () => {
